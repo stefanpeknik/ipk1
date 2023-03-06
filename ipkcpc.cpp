@@ -71,6 +71,48 @@ int main(int argc, char *argv[])
   server_hostname = host.c_str();
   port_number = port;
 
+  /* 2. ziskani adresy serveru pomoci DNS */
+
+  if ((server = gethostbyname(server_hostname)) == NULL)
+  {
+    fprintf(stderr, "ERROR: no such host as %s\n", server_hostname);
+    exit(EXIT_FAILURE);
+  }
+
+  /* 3. nalezeni IP adresy serveru a inicializace struktury server_address */
+
+  bzero((char *)&server_address, sizeof(server_address));
+  server_address.sin_family = AF_INET;
+  bcopy((char *)server->h_addr, (char *)&server_address.sin_addr.s_addr, server->h_length);
+  server_address.sin_port = htons(port_number);
+
+  /* Vytvoreni soketu */
+
+  if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) <= 0)
+  {
+    perror("ERROR: socket");
+    exit(EXIT_FAILURE);
+  }
+
+  /* Navazani spojeni */
+
+  if (mode == "tcp")
+  {
+    if (connect(client_socket, (const struct sockaddr *)&server_address, sizeof(server_address)) != 0)
+    {
+      perror("ERROR: connect");
+      exit(EXIT_FAILURE);
+    }
+    else if (mode == "udp")
+    {
+      if (connect(client_socket, (const struct sockaddr *)&server_address, sizeof(server_address)) != 0)
+      {
+        perror("ERROR: connect");
+        exit(EXIT_FAILURE);
+      }
+    }
+  }
+
 
   return EXIT_SUCCESS;
 }

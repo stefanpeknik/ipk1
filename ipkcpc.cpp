@@ -23,6 +23,34 @@ char buf[BUFSIZE];
 std::string host;
 int port = 0;
 std::string mode;
+
+void signalHandler(int signum)
+{
+  if (mode == "tcp")
+  {
+    /* odeslani ukonceni spojeni */
+    strcpy(buf, "BYE\n");
+    bytestx = send(client_socket, "BYE\n", strlen("BYE\n"), 0);
+    /* vypsani konecne odpovedi */
+    if (bytesrx < 0)
+    {
+      perror("ERROR: recv");
+      exit(EXIT_FAILURE);
+    }
+    printf("%s", buf);
+
+    /* ukonceni spojeni */
+    close(client_socket);
+  }
+  else if (mode == "udp")
+  {
+    /* ukonceni spojeni */
+    close(client_socket);
+  }
+
+  exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *argv[])
 {
   /* 1. test vstupnich parametru: */
@@ -116,6 +144,7 @@ int main(int argc, char *argv[])
   while (true)
   {
     /* nacteni zpravy od uzivatele */
+    signal(SIGINT, signalHandler);
 
     bzero(buf, BUFSIZE);
     fgets(buf, BUFSIZE, stdin);

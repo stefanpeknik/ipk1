@@ -113,6 +113,57 @@ int main(int argc, char *argv[])
     }
   }
 
+  while (true)
+  {
+    /* nacteni zpravy od uzivatele */
+
+    bzero(buf, BUFSIZE);
+    fgets(buf, BUFSIZE, stdin);
+
+    /* odeslani zpravy serveru */
+
+    if (mode == "tcp")
+    {
+      bytestx = send(client_socket, buf, strlen(buf), 0);
+    }
+    else if (mode == "udp")
+    {
+      bytestx = sendto(client_socket, buf, strlen(buf), 0, (struct sockaddr *)&server_address, sizeof(server_address));
+    }
+
+    if (bytestx < 0)
+    {
+      perror("ERROR: send");
+      exit(EXIT_FAILURE);
+    }
+
+    bzero(buf, BUFSIZE);
+
+    /* prijmuti odpovedi od serveru */
+    if (mode == "tcp")
+    {
+      bytesrx = recv(client_socket, buf, BUFSIZE, 0);
+    }
+    else if (mode == "udp")
+    {
+      bytesrx = recvfrom(client_socket, buf, BUFSIZE, 0, (struct sockaddr *)&server_address, &serverlen);
+    }
+
+    /* vypsani odpovedi */
+    if (bytesrx < 0)
+    {
+      perror("ERROR: recv");
+      exit(EXIT_FAILURE);
+    }
+    printf("%s", buf);
+
+    /* ukonceni spojeni */
+    if (mode == "tcp" && strcmp(buf, "BYE\n") == 0)
+    {
+      close(client_socket);
+      break;
+    }
+  }
 
   return EXIT_SUCCESS;
 }

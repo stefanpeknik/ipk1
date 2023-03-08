@@ -20,8 +20,6 @@ struct hostent *server;
 struct sockaddr_in server_address;
 char buf[BUFSIZE];
 
-std::string host;
-int port = 0;
 std::string mode;
 
 void signalHandler(int signum)
@@ -61,13 +59,13 @@ int main(int argc, char *argv[])
 
     if (arg == "-h" && i + 1 < argc)
     {
-      host = argv[++i];
+      server_hostname = argv[++i];
     }
     else if (arg == "-p" && i + 1 < argc)
     {
       std::string port_str = argv[++i];
       char *p;
-      port = strtol(port_str.c_str(), &p, 10);
+      port_number = strtol(port_str.c_str(), &p, 10);
       if (*p)
       {
         std::cerr << "Invalid port number: " << port_str << std::endl;
@@ -90,14 +88,11 @@ int main(int argc, char *argv[])
     }
   }
 
-  if (host.empty() || port == 0 || mode.empty())
+  if (strcmp(server_hostname, "") == 0 || port_number == 0 || mode.empty())
   {
     fprintf(stderr, "Usage: %s -h <host> -p <port> -m <mode>\n", argv[0]);
     return 1;
   }
-
-  server_hostname = host.c_str();
-  port_number = port;
 
   /* 2. ziskani adresy serveru pomoci DNS */
 
@@ -116,12 +111,22 @@ int main(int argc, char *argv[])
 
   /* Vytvoreni soketu */
 
-  if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) <= 0)
+  if (mode == "tcp")
   {
-    perror("ERROR: socket");
-    exit(EXIT_FAILURE);
+    if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) <= 0)
+    {
+      perror("ERROR: socket");
+      exit(EXIT_FAILURE);
+    }
   }
-
+  else if (mode == "udp")
+  {
+    if ((client_socket = socket(AF_INET, SOCK_DGRAM, 0)) <= 0)
+    {
+      perror("ERROR: socket");
+      exit(EXIT_FAILURE);
+    }
+  }
   /* Navazani spojeni */
 
   if (mode == "tcp")
@@ -151,8 +156,12 @@ int main(int argc, char *argv[])
     }
     else if (mode == "udp")
     {
+      int buf_len = strlen(buf);
+      memmove(&buf[2], buf, buf_len);
+      buf[0] = '\0';
+      buf[1] = (char)buf_len;
       serverlen = sizeof(server_address);
-      bytestx = sendto(client_socket, buf, strlen(buf), 0, (struct sockaddr *)&server_address, serverlen);
+      bytestx = sendto(client_socket, buf, buf_len + 2, 0, (struct sockaddr *)&server_address, serverlen);
       if (bytestx < 0)
         perror("ERROR: sendto");
     }
@@ -174,7 +183,21 @@ int main(int argc, char *argv[])
     }
 
     /* vypsani odpovedi */
-    printf("%s", buf);
+    if (mode == "udp")
+    {
+      if (buf[1] == '\1')
+      {
+        printf("ERROR:%s\n", buf + 3);
+      }
+      else if (buf[1] == '\0')
+      {
+        printf("OK:%s\n", buf + 3);
+      }
+    }
+    else
+    {
+      printf("%s", buf);
+    }
 
     /* ukonceni spojeni */
     if (mode == "tcp" && strcmp(buf, "BYE\n") == 0)

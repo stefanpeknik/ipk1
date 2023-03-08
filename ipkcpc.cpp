@@ -30,7 +30,7 @@ void signalHandler(int signum)
   {
     /* odeslani ukonceni spojeni */
     strcpy(buf, "BYE\n");
-    bytestx = send(client_socket, "BYE\n", strlen("BYE\n"), 0);
+    bytestx = send(client_socket, buf, strlen(buf), 0);
     /* vypsani konecne odpovedi */
     if (bytesrx < 0)
     {
@@ -131,14 +131,6 @@ int main(int argc, char *argv[])
       perror("ERROR: connect");
       exit(EXIT_FAILURE);
     }
-    else if (mode == "udp")
-    {
-      if (connect(client_socket, (const struct sockaddr *)&server_address, sizeof(server_address)) != 0)
-      {
-        perror("ERROR: connect");
-        exit(EXIT_FAILURE);
-      }
-    }
   }
 
   while (true)
@@ -154,16 +146,15 @@ int main(int argc, char *argv[])
     if (mode == "tcp")
     {
       bytestx = send(client_socket, buf, strlen(buf), 0);
+      if (bytestx < 0)
+        perror("ERROR in sendto");
     }
     else if (mode == "udp")
     {
-      bytestx = sendto(client_socket, buf, strlen(buf), 0, (struct sockaddr *)&server_address, sizeof(server_address));
-    }
-
-    if (bytestx < 0)
-    {
-      perror("ERROR: send");
-      exit(EXIT_FAILURE);
+      serverlen = sizeof(server_address);
+      bytestx = sendto(client_socket, buf, strlen(buf), 0, (struct sockaddr *)&server_address, serverlen);
+      if (bytestx < 0)
+        perror("ERROR: sendto");
     }
 
     bzero(buf, BUFSIZE);
@@ -172,18 +163,17 @@ int main(int argc, char *argv[])
     if (mode == "tcp")
     {
       bytesrx = recv(client_socket, buf, BUFSIZE, 0);
+      if (bytesrx < 0)
+        perror("ERROR in recvfrom");
     }
     else if (mode == "udp")
     {
       bytesrx = recvfrom(client_socket, buf, BUFSIZE, 0, (struct sockaddr *)&server_address, &serverlen);
+      if (bytesrx < 0)
+        perror("ERROR: recvfrom");
     }
 
     /* vypsani odpovedi */
-    if (bytesrx < 0)
-    {
-      perror("ERROR: recv");
-      exit(EXIT_FAILURE);
-    }
     printf("%s", buf);
 
     /* ukonceni spojeni */
@@ -192,6 +182,7 @@ int main(int argc, char *argv[])
       close(client_socket);
       break;
     }
+    bzero(buf, BUFSIZE);
   }
 
   return EXIT_SUCCESS;

@@ -51,9 +51,6 @@ void signalHandler(int signum)
 
 int main(int argc, char *argv[])
 {
-  /* Zachyceni ctrl+C */
-  signal(SIGINT, signalHandler);
-
   /* 1. test vstupnich parametru: */
 
   for (int i = 1; i < argc; i++)
@@ -96,6 +93,9 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Usage: %s -h <host> -p <port> -m <mode>\n", argv[0]);
     return 1;
   }
+
+  /* Zachyceni ctrl+C */
+  signal(SIGINT, signalHandler);
 
   /* 2. ziskani adresy serveru pomoci DNS */
 

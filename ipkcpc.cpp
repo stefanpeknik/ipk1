@@ -13,6 +13,7 @@
 
 #define BUFSIZE 1024
 
+// Global variables for signal handler
 int client_socket, port_number, bytestx, bytesrx;
 socklen_t serverlen;
 const char *server_hostname;
@@ -22,6 +23,7 @@ char buf[BUFSIZE];
 
 std::string mode;
 
+// Signal handler for ctrl+C (SIGINT)
 void signalHandler(int signum)
 {
   if (mode == "tcp")

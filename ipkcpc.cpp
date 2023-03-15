@@ -53,6 +53,12 @@ int main(int argc, char *argv[])
 {
   /* 1. test vstupnich parametru: */
 
+  if (argc != 7)
+  {
+    fprintf(stderr, "Usage: %s -h <host> -p <port> -m <mode>\n", argv[0]);
+    return EXIT_FAILURE;
+  }
+
   for (int i = 1; i < argc; i++)
   {
     std::string arg = argv[i];

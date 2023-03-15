@@ -51,6 +51,9 @@ void signalHandler(int signum)
 
 int main(int argc, char *argv[])
 {
+  /* Zachyceni ctrl+C */
+  signal(SIGINT, signalHandler);
+
   /* 1. test vstupnich parametru: */
 
   for (int i = 1; i < argc; i++)
@@ -137,9 +140,6 @@ int main(int argc, char *argv[])
       exit(EXIT_FAILURE);
     }
   }
-
-  /* Zachyceni ctrl+C */
-  signal(SIGINT, signalHandler);
 
   while (true)
   {

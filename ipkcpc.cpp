@@ -138,10 +138,12 @@ int main(int argc, char *argv[])
     }
   }
 
+  /* Zachyceni ctrl+C */
+  signal(SIGINT, signalHandler);
+
   while (true)
   {
     /* nacteni zpravy od uzivatele */
-    signal(SIGINT, signalHandler);
 
     bzero(buf, BUFSIZE);
     fgets(buf, BUFSIZE, stdin);

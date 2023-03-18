@@ -101,9 +101,6 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  /* Zachyceni ctrl+C */
-  signal(SIGINT, signalHandler);
-
   /* 2. ziskani adresy serveru pomoci DNS */
 
   if ((server = gethostbyname(server_hostname)) == NULL)
@@ -147,6 +144,10 @@ int main(int argc, char *argv[])
       exit(EXIT_FAILURE);
     }
   }
+
+    /* Zachyceni ctrl+C */
+  bzero(buf, BUFSIZE);
+  signal(SIGINT, signalHandler);
 
   while (true)
   {

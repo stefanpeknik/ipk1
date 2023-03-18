@@ -166,12 +166,12 @@ int main(int argc, char *argv[])
     }
     else if (mode == "udp")
     {
-      int buf_len = strlen(buf);
-      memmove(&buf[2], buf, buf_len);
+      int msg_len = strlen(buf);
+      memmove(&buf[2], buf, msg_len);
       buf[0] = '\0';
-      buf[1] = (char)buf_len;
+      buf[1] = (char)msg_len;
       serverlen = sizeof(server_address);
-      bytestx = sendto(client_socket, buf, buf_len + 2, 0, (struct sockaddr *)&server_address, serverlen);
+      bytestx = sendto(client_socket, buf, msg_len + 2, 0, (struct sockaddr *)&server_address, serverlen);
       if (bytestx < 0)
         perror("ERROR: sendto");
     }

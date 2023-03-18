@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
       /* konstrola status code */
       if (buf[1] == '\1')
       {
-        printf("ERROR:%s\n", buf + 3);
+        printf("ERR:%s\n", buf + 3);
       }
       else if (buf[1] == '\0')
       {

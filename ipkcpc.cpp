@@ -13,7 +13,7 @@
 
 #define BUFSIZE 1024
 
-// Global variables for signal handler
+/* globalni promenne */ 
 int client_socket, port_number, bytestx, bytesrx;
 socklen_t serverlen;
 const char *server_hostname;
@@ -23,7 +23,7 @@ char buf[BUFSIZE];
 
 std::string mode;
 
-// Signal handler for ctrl+C (SIGINT)
+/* Zachytavac signalu ctrl+C (SIGINT) */
 void signalHandler(int signum)
 {
   if (mode == "tcp")
@@ -154,15 +154,22 @@ int main(int argc, char *argv[])
     /* nacteni zpravy od uzivatele */
 
     bzero(buf, BUFSIZE);
-    fgets(buf, BUFSIZE, stdin);
+    fgets(buf, BUFSIZE - 1, stdin);
 
     /* odeslani zpravy serveru */
 
     if (mode == "tcp")
     {
+      size_t msg_len = strlen(buf);
+      if (msg_len > 0 && buf[msg_len-1] != '\n') 
+      {
+        buf[msg_len] = '\n';
+        buf[msg_len+1] = '\0';
+      }
       bytestx = send(client_socket, buf, strlen(buf), 0);
       if (bytestx < 0)
         perror("ERROR in sendto");
+        continue;
     }
     else if (mode == "udp")
     {
@@ -182,6 +189,7 @@ int main(int argc, char *argv[])
       bytestx = sendto(client_socket, buf, msg_len + 2, 0, (struct sockaddr *)&server_address, serverlen);
       if (bytestx < 0)
         perror("ERROR: sendto");
+        continue;
     }
 
     bzero(buf, BUFSIZE);
@@ -192,12 +200,14 @@ int main(int argc, char *argv[])
       bytesrx = recv(client_socket, buf, BUFSIZE, 0);
       if (bytesrx < 0)
         perror("ERROR in recvfrom");
+        continue;
     }
     else if (mode == "udp")
     {
       bytesrx = recvfrom(client_socket, buf, BUFSIZE, 0, (struct sockaddr *)&server_address, &serverlen);
       if (bytesrx < 0)
         perror("ERROR: recvfrom");
+        continue;
     }
 
     /* vypsani odpovedi */

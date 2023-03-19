@@ -167,6 +167,10 @@ int main(int argc, char *argv[])
     else if (mode == "udp")
     {
       int msg_len = strlen(buf);
+      if (msg_len > 255)
+      {
+        msg_len = 255;
+      }
       memmove(&buf[2], buf, msg_len);
       buf[0] = '\0';
       buf[1] = (char)msg_len;

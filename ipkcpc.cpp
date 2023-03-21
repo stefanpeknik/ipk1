@@ -38,11 +38,17 @@ void signalHandler(int signum)
       perror("ERROR: recv");
       exit(EXIT_FAILURE);
     }
+    bytesrx = recv(client_socket, buf, BUFSIZE, 0);
+    if (bytesrx < 0)
+    {
+      perror("ERROR in recvfrom");
+      exit(EXIT_FAILURE);
+    }
     printf("%s", buf);
-
-    /* ukonceni spojeni */
-    close(client_socket);
   }
+
+  /* ukonceni spojeni */
+  close(client_socket);
 
   exit(EXIT_SUCCESS);
 }
@@ -81,21 +87,21 @@ int main(int argc, char *argv[])
       mode = argv[++i];
       if (mode != "tcp" && mode != "udp")
       {
-        std::cerr << "Invalid mode: " << mode << std::endl;
+        fprintf(stderr, "Invalid mode: %s", mode.c_str());
         return EXIT_FAILURE;
       }
     }
     else
     {
-      std::cerr << "Unknown argument: " << arg << std::endl;
+      fprintf(stderr, "Unknown argument: %s", arg.c_str());
       return EXIT_FAILURE;
     }
   }
 
   if (strcmp(server_hostname, "") == 0 || port_number == 0 || mode.empty())
   {
-    fprintf(stderr, "Usage: %s -h <host> -p <port> -m <mode>\n", argv[0]);
-    return 1;
+    fprintf(stderr, "Usage: %s -h <host> -p <port> -m <tcp/udp>\n", argv[0]);
+    return EXIT_FAILURE;
   }
 
   /* 2. ziskani adresy serveru pomoci DNS */
@@ -132,6 +138,7 @@ int main(int argc, char *argv[])
     }
 
     /* Nastaveni timeoutu */
+
     struct timeval timeout;
     timeout.tv_sec = 10;
     timeout.tv_usec = 0;
@@ -184,7 +191,7 @@ int main(int argc, char *argv[])
     }
     else if (mode == "udp")
     {
-      int msg_len = strlen(buf);
+      size_t msg_len = strlen(buf);
       if (msg_len > 0 && buf[msg_len - 1] == '\n')
       {
         buf[msg_len--] = '\0';
@@ -212,8 +219,10 @@ int main(int argc, char *argv[])
     {
       bytesrx = recv(client_socket, buf, BUFSIZE, 0);
       if (bytesrx < 0)
+      {
         perror("ERROR in recvfrom");
-      continue;
+        continue;
+      }
     }
     else if (mode == "udp")
     {

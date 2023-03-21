@@ -10,10 +10,11 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/time.h>
 
 #define BUFSIZE 1024
 
-/* globalni promenne */ 
+/* globalni promenne */
 int client_socket, port_number, bytestx, bytesrx;
 socklen_t serverlen;
 const char *server_hostname;
@@ -133,7 +134,19 @@ int main(int argc, char *argv[])
       perror("ERROR: socket");
       exit(EXIT_FAILURE);
     }
+
+    /* Nastaveni timeoutu */
+    struct timeval timeout;
+    timeout.tv_sec = 10;
+    timeout.tv_usec = 0;
+
+    if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout, sizeof(timeout)) < 0)
+    {
+      perror("ERROR: setsockopt");
+      exit(EXIT_FAILURE);
+    }
   }
+
   /* Navazani spojeni */
 
   if (mode == "tcp")
@@ -145,7 +158,7 @@ int main(int argc, char *argv[])
     }
   }
 
-    /* Zachyceni ctrl+C */
+  /* Zachyceni ctrl+C */
   bzero(buf, BUFSIZE);
   signal(SIGINT, signalHandler);
 
@@ -161,20 +174,20 @@ int main(int argc, char *argv[])
     if (mode == "tcp")
     {
       size_t msg_len = strlen(buf);
-      if (msg_len > 0 && buf[msg_len-1] != '\n') 
+      if (msg_len > 0 && buf[msg_len - 1] != '\n')
       {
         buf[msg_len] = '\n';
-        buf[msg_len+1] = '\0';
+        buf[msg_len + 1] = '\0';
       }
       bytestx = send(client_socket, buf, strlen(buf), 0);
       if (bytestx < 0)
         perror("ERROR in sendto");
-        continue;
+      continue;
     }
     else if (mode == "udp")
     {
       int msg_len = strlen(buf);
-      if (msg_len > 0 && buf[msg_len-1] == '\n') 
+      if (msg_len > 0 && buf[msg_len - 1] == '\n')
       {
         buf[msg_len--] = '\0';
       }
@@ -186,10 +199,11 @@ int main(int argc, char *argv[])
       buf[0] = '\0';
       buf[1] = (char)msg_len;
       serverlen = sizeof(server_address);
+      printf("Sending %d bytes to server\n", msg_len + 2);
       bytestx = sendto(client_socket, buf, msg_len + 2, 0, (struct sockaddr *)&server_address, serverlen);
       if (bytestx < 0)
         perror("ERROR: sendto");
-        continue;
+      continue;
     }
 
     bzero(buf, BUFSIZE);
@@ -200,14 +214,23 @@ int main(int argc, char *argv[])
       bytesrx = recv(client_socket, buf, BUFSIZE, 0);
       if (bytesrx < 0)
         perror("ERROR in recvfrom");
-        continue;
+      continue;
     }
     else if (mode == "udp")
     {
       bytesrx = recvfrom(client_socket, buf, BUFSIZE, 0, (struct sockaddr *)&server_address, &serverlen);
       if (bytesrx < 0)
-        perror("ERROR: recvfrom");
+      {
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        {
+          perror("ERROR: timeout occurred");
+        }
+        else
+        {
+          perror("ERROR: recvfrom");
+        }
         continue;
+      }
     }
 
     /* vypsani odpovedi */
@@ -216,11 +239,11 @@ int main(int argc, char *argv[])
       /* konstrola status code */
       if (buf[1] == '\1')
       {
-        printf("ERR:%s\n", buf + 3);
+        printf("ERR:%s\n", std::string(buf + 3, (int)buf[2]).c_str());
       }
       else if (buf[1] == '\0')
       {
-        printf("OK:%s\n", buf + 3);
+        printf("OK:%s\n", std::string(buf + 3, (int)buf[2]).c_str());
       }
     }
     else

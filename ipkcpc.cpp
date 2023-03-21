@@ -177,8 +177,10 @@ int main(int argc, char *argv[])
       }
       bytestx = send(client_socket, buf, strlen(buf), 0);
       if (bytestx < 0)
+      {
         perror("ERROR in sendto");
-      continue;
+        continue;
+      }
     }
     else if (mode == "udp")
     {
@@ -195,11 +197,12 @@ int main(int argc, char *argv[])
       buf[0] = '\0';
       buf[1] = (char)msg_len;
       serverlen = sizeof(server_address);
-      printf("Sending %d bytes to server\n", msg_len + 2);
       bytestx = sendto(client_socket, buf, msg_len + 2, 0, (struct sockaddr *)&server_address, serverlen);
       if (bytestx < 0)
+      {
         perror("ERROR: sendto");
-      continue;
+        continue;
+      }
     }
 
     bzero(buf, BUFSIZE);

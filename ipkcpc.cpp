@@ -14,7 +14,7 @@
 
 #define BUFSIZE 1024
 
-/* globalni promenne */
+/* global variables */
 int client_socket, port_number, bytestx, bytesrx;
 socklen_t serverlen;
 const char *server_hostname;
@@ -24,15 +24,14 @@ char buf[BUFSIZE];
 
 std::string mode;
 
-/* Zachytavac signalu ctrl+C (SIGINT) */
+/* signal handler of ctrl+C (SIGINT) */
 void signalHandler(int signum)
 {
   if (mode == "tcp")
   {
-    /* odeslani ukonceni spojeni */
+    /* sending a connection termination */
     strcpy(buf, "BYE\n");
     bytestx = send(client_socket, buf, strlen(buf), 0);
-    /* vypsani konecne odpovedi */
     if (bytesrx < 0)
     {
       perror("ERROR: recv");
@@ -47,7 +46,7 @@ void signalHandler(int signum)
     printf("%s", buf);
   }
 
-  /* ukonceni spojeni */
+  /* termination of the connection */
   close(client_socket);
 
   exit(EXIT_SUCCESS);
@@ -55,7 +54,7 @@ void signalHandler(int signum)
 
 int main(int argc, char *argv[])
 {
-  /* 1. test vstupnich parametru: */
+  /* 1. test of input parameters: */
 
   if (argc != 7)
   {
@@ -104,7 +103,7 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  /* 2. ziskani adresy serveru pomoci DNS */
+  /* 2. obtaining the server address using DNS */
 
   if ((server = gethostbyname(server_hostname)) == NULL)
   {
@@ -112,14 +111,14 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
-  /* 3. nalezeni IP adresy serveru a inicializace struktury server_address */
+  /* 3. finding the IP address of the server and initializing the server_address structure */
 
   bzero((char *)&server_address, sizeof(server_address));
   server_address.sin_family = AF_INET;
   bcopy((char *)server->h_addr, (char *)&server_address.sin_addr.s_addr, server->h_length);
   server_address.sin_port = htons(port_number);
 
-  /* Vytvoreni soketu */
+  /* Creating a socket */
 
   if (mode == "tcp")
   {
@@ -137,7 +136,7 @@ int main(int argc, char *argv[])
       exit(EXIT_FAILURE);
     }
 
-    /* Nastaveni timeoutu */
+    /* Timeout setting */
 
     struct timeval timeout;
     timeout.tv_sec = 10;
@@ -150,7 +149,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  /* Navazani spojeni */
+  /* Establishing a connection */
 
   if (mode == "tcp")
   {
@@ -161,18 +160,18 @@ int main(int argc, char *argv[])
     }
   }
 
-  /* Zachyceni ctrl+C */
+  /* Capture ctrl+C */
   bzero(buf, BUFSIZE);
   signal(SIGINT, signalHandler);
 
   while (true)
   {
-    /* nacteni zpravy od uzivatele */
+    /* loading a message from the user */
 
     bzero(buf, BUFSIZE);
     fgets(buf, BUFSIZE - 1, stdin);
 
-    /* odeslani zpravy serveru */
+    /* sending a message to the server */
 
     if (mode == "tcp")
     {
@@ -214,7 +213,7 @@ int main(int argc, char *argv[])
 
     bzero(buf, BUFSIZE);
 
-    /* prijmuti odpovedi od serveru */
+    /* receiving a response from the server */
     if (mode == "tcp")
     {
       bytesrx = recv(client_socket, buf, BUFSIZE, 0);
@@ -241,10 +240,10 @@ int main(int argc, char *argv[])
       }
     }
 
-    /* vypsani odpovedi */
+    /* writing the answer */
     if (mode == "udp")
     {
-      /* konstrola status code */
+      /* check the status code */
       if (buf[1] == '\1')
       {
         printf("ERR:%s\n", std::string(buf + 3, (int)buf[2]).c_str());
@@ -259,7 +258,7 @@ int main(int argc, char *argv[])
       printf("%s", buf);
     }
 
-    /* ukonceni spojeni */
+    /* termination of the connection */
     if (mode == "tcp" && strcmp(buf, "BYE\n") == 0)
     {
       close(client_socket);

@@ -43,10 +43,6 @@ void signalHandler(int signum)
     /* ukonceni spojeni */
     close(client_socket);
   }
-  else if (mode == "udp")
-  {
-    /* ukonceni spojeni */
-  }
 
   exit(EXIT_SUCCESS);
 }

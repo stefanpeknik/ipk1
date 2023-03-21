@@ -1,3 +1,15 @@
+/**
+ * @file ipkcpc.cpp
+ * @brief IPK project 2 - client
+ * @author Stefan Peknik
+ * @date 21.3.2023
+ * @details This file contains the client part of the IPK project 1.
+ * The client is able to send a message to the server and receive a response.
+ * The client can be run in two modes: TCP and UDP.
+ * The client can be terminated by pressing ctrl+C.
+ * The client can be terminated by sending a message "BYE" to the server in TCP mode.
+ */
+
 #include <iostream>
 #include <string>
 #include <stdio.h>

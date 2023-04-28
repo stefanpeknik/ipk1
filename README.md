@@ -75,4 +75,4 @@ BYE
 ```
 
 ## Sources
-Parts of code were taken from / inspired by code in [IPK-Projekty]https://git.fit.vutbr.cz/NESFIT/IPK-Projekty repository in stubs written in C language.
+Parts of code were taken from / inspired by code in [IPK-Projekty](https://git.fit.vutbr.cz/NESFIT/IPK-Projekty) repository in stubs written in C language.
